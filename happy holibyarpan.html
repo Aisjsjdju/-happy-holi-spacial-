@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>A Colorful Surprise For You! 🌈</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --c1: #FF1493; /* DeepPink */
+            --c2: #00FFFF; /* Cyan */
+            --c3: #FFFF00; /* Yellow */
+            --c4: #32CD32; /* LimeGreen */
+            --c5: #FF4500; /* OrangeRed */
+            --c6: #8A2BE2; /* BlueViolet */
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            font-family: 'Poppins', sans-serif;
+            background-color: #0a0a0a;
+            color: white;
+            touch-action: pan-y; /* Allow vertical scroll but handle touches */
+        }
+
+        /* Prevent scroll during presentation scenes */
+        body.no-scroll {
+            overflow: hidden;
+        }
+
+        h1, h2, h3, .festive-font {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 800;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.9), 0 0 20px var(--c1), 0 0 40px var(--c6);
+            letter-spacing: 1px;
+        }
+
+        p, .typing-text, #s1-text {
+            text-shadow: 0 0 8px rgba(255, 255, 255, 0.6), 0 0 15px var(--c2);
+        }
+
+        .creator-tag {
+            position: fixed;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.85rem;
+            color: white;
+            z-index: 10000;
+            text-shadow: 0 0 10px var(--c1), 0 0 20px var(--c3);
+            font-weight: 600;
+            pointer-events: none;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            white-space: nowrap;
+        }
+
+        /* Tap Instructions */
+        .tap-hint {
+            font-size: 1.2rem;
+            color: #FFFF00;
+            text-shadow: 0 0 10px #FF4500, 0 0 20px #FF1493;
+            animation: bounce 1.5s infinite;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            pointer-events: none;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        /* Running Holi Characters */
+        .holi-char {
+            position: fixed;
+            font-size: 4rem;
+            bottom: 5%;
+            pointer-events: none;
+            z-index: 50;
+            opacity: 0.9;
+            filter: drop-shadow(0 0 15px rgba(255,255,255,0.6));
+            animation: runAcross 10s linear infinite;
+            display: none;
+        }
+
+        @keyframes runAcross {
+            0% { transform: translateX(-20vw) scaleX(1); }
+            49% { transform: translateX(120vw) scaleX(1); }
+            50% { transform: translateX(120vw) scaleX(-1); }
+            100% { transform: translateX(-20vw) scaleX(-1); }
+        }
+
+        /* Canvas Layers */
+        #bg-canvas, #fx-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 0;
+        }
+        #fx-canvas {
+            z-index: 9999; /* Splashes go over everything */
+        }
+
+        /* Scene Management */
+        .scene {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 1s ease-in-out, visibility 1s ease-in-out;
+            z-index: 10;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .scene.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Scrollable final section */
+        #final-section {
+            position: relative;
+            width: 100%;
+            min-height: 100vh;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            z-index: 10;
+            background: linear-gradient(135deg, rgba(20,20,20,0.9), rgba(40,10,40,0.9));
+            padding-bottom: 50px;
+        }
+
+        #final-section.active {
+            display: flex;
+            animation: fadeIn 2s ease-in-out;
+        }
+
+        /* UI Elements */
+        .glowing-btn {
+            background: linear-gradient(45deg, var(--c1), var(--c5), var(--c6));
+            background-size: 200% 200%;
+            animation: gradientShift 3s ease infinite, glowPulse 2s infinite alternate;
+            border: none;
+            border-radius: 50px;
+            color: white;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(255, 20, 147, 0.5);
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+            z-index: 20;
+        }
+
+        .glowing-btn:active, .glowing-btn:hover {
+            transform: scale(0.95);
+            box-shadow: 0 0 40px rgba(255, 255, 255, 0.8);
+        }
+
+        /* 3D Box */
+        .scene-100perspective {
+            perspective: 1000px;
+            margin-top: 40px;
+        }
+        
+        .cube {
+            width: 100px;
+            height: 100px;
+            position: relative;
+            transform-style: preserve-3d;
+            animation: spinCube 6s infinite linear;
+            cursor: pointer;
+        }
+
+        .cube-face {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            border: 2px solid white;
+            box-shadow: inset 0 0 20px rgba(255,255,255,0.5);
+            opacity: 0.9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+        }
+
+        .cube-face.front  { transform: rotateY(  0deg) translateZ(50px); background: var(--c1); }
+        .cube-face.right  { transform: rotateY( 90deg) translateZ(50px); background: var(--c2); }
+        .cube-face.back   { transform: rotateY(180deg) translateZ(50px); background: var(--c3); }
+        .cube-face.left   { transform: rotateY(-90deg) translateZ(50px); background: var(--c4); }
+        .cube-face.top    { transform: rotateX( 90deg) translateZ(50px); background: var(--c5); }
+        .cube-face.bottom { transform: rotateX(-90deg) translateZ(50px); background: var(--c6); }
+
+        /* 3D Gallery */
+        .gallery-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            width: 90%;
+            max-width: 1200px;
+            margin-top: 50px;
+            perspective: 1000px;
+        }
+
+        .gallery-card {
+            position: relative;
+            height: 350px;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+            transform-style: preserve-3d;
+            transition: transform 0.1s;
+            cursor: pointer;
+            border: 3px solid transparent;
+            background-clip: padding-box;
+        }
+        
+        .gallery-card::before {
+            content: '';
+            position: absolute;
+            top: -2px; bottom: -2px; left: -2px; right: -2px;
+            background: linear-gradient(45deg, var(--c1), var(--c2), var(--c3), var(--c4), var(--c5), var(--c6));
+            z-index: -1;
+            border-radius: 22px;
+            animation: gradientShift 5s linear infinite;
+        }
+
+        .gallery-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .gallery-card:hover img {
+            transform: scale(1.1) translateZ(20px);
+        }
+
+        .card-caption {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: linear-gradient(transparent, rgba(0,0,0,0.9));
+            padding: 20px;
+            transform: translateZ(30px);
+            text-align: center;
+            font-weight: 600;
+        }
+
+        /* Text Animations & Effects */
+        .typing-text {
+            border-right: 3px solid white;
+            white-space: pre-wrap;
+            overflow: hidden;
+            animation: blinkCursor 0.75s step-end infinite;
+        }
+
+        .text-3d-glow {
+            font-size: 3rem;
+            color: #fff;
+            text-shadow: 
+                0 0 10px #fff,
+                0 0 20px var(--c1),
+                0 0 40px var(--c1),
+                0 0 80px var(--c5),
+                2px 2px 0px var(--c2),
+                4px 4px 0px var(--c4);
+            transform: translateZ(50px);
+            animation: floatText 3s ease-in-out infinite alternate;
+        }
+
+        @media (min-width: 768px) {
+            .text-3d-glow { font-size: 5rem; }
+        }
+
+        .heart-beat {
+            font-size: 5rem;
+            animation: beat 1s infinite alternate;
+            text-shadow: 0 0 30px var(--c1);
+            margin: 20px 0;
+            display: none;
+        }
+
+        /* Floating Holi Elements */
+        .pichkari, .balloon {
+            position: absolute;
+            font-size: 3rem;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* Animations */
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes glowPulse {
+            from { box-shadow: 0 0 10px var(--c1), 0 0 20px var(--c6); }
+            to { box-shadow: 0 0 30px var(--c2), 0 0 50px var(--c4); }
+        }
+
+        @keyframes spinCube {
+            from { transform: rotateX(0deg) rotateY(0deg); }
+            to { transform: rotateX(360deg) rotateY(360deg); }
+        }
+
+        @keyframes blinkCursor {
+            from, to { border-color: transparent; }
+            50% { border-color: white; }
+        }
+
+        @keyframes floatText {
+            from { transform: translateY(0px) scale(1); }
+            to { transform: translateY(-15px) scale(1.05); }
+        }
+
+        @keyframes beat {
+            from { transform: scale(1); }
+            to { transform: scale(1.3); }
+        }
+
+        @keyframes floatUpFade {
+            0% { transform: translateY(100vh) scale(0.5) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(-20vh) scale(1.5) rotate(360deg); opacity: 0; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Music Controls */
+        #music-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.4);
+            color: white;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(0,0,0,0.3);
+            transition: all 0.3s;
+        }
+        #music-toggle:hover {
+            background: rgba(255, 255, 255, 0.4);
+            transform: scale(1.1);
+        }
+
+        /* Footer */
+        .glow-footer {
+            margin-top: 50px;
+            font-size: 1rem;
+            color: rgba(255,255,255,0.6);
+            animation: pulseText 2s infinite alternate;
+        }
+        @keyframes pulseText {
+            from { text-shadow: 0 0 5px rgba(255,255,255,0.2); color: rgba(255,255,255,0.6); }
+            to { text-shadow: 0 0 15px rgba(255,255,255,0.8); color: rgba(255,255,255,1); }
+        }
+
+    </style>
+</head>
+<body class="no-scroll">
+
+    <!-- Top Creator Tag -->
+    <div class="creator-tag">Created by Arpan Gayen</div>
+
+    <!-- Audio Element (Using a beautiful royalty-free festive/inspiring track placeholder) -->
+    <!-- Note: For a real deployment, replace src with your actual audio file -->
+    <audio id="bg-music" loop>
+        <source src="https://cdn.pixabay.com/download/audio/2022/02/22/audio_d1718ab41b.mp3?filename=inspiring-cinematic-ambient-116453.mp3" type="audio/mpeg">
+    </audio>
+
+    <button id="music-toggle" onclick="toggleMusic()">
+        <svg id="icon-play" class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path></svg>
+        <svg id="icon-pause" class="w-6 h-6 hidden" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>
+    </button>
+
+    <!-- Canvas Layers -->
+    <canvas id="bg-canvas"></canvas>
+    <canvas id="fx-canvas"></canvas>
+
+    <!-- SCENE 1: Opening Mystery -->
+    <div id="scene-1" class="scene active">
+        <h2 class="text-3xl md:text-5xl font-light mb-8 text-gray-300 tracking-wide transition-opacity duration-1000 opacity-0" id="s1-text">Wait… Something Colorful is Coming…</h2>
+        <div class="tap-hint opacity-0 transition-opacity duration-1000 delay-500" id="s1-hint">👇 Ekhane Tap Korun 👇</div>
+        <button class="glowing-btn opacity-0 transition-opacity duration-1000 delay-500" id="btn-start" onclick="nextScene(2, true)">Touch the Colors</button>
+    </div>
+
+    <!-- SCENE 2: First Surprise -->
+    <div id="scene-2" class="scene">
+        <h2 class="text-2xl md:text-4xl font-semibold mb-10 typing-text" id="type-text-1"></h2>
+        <div class="scene-100perspective opacity-0 transition-opacity duration-1000" id="s2-box-container">
+            <div class="tap-hint">👇 Magic Box-a Tap Korun 👇</div>
+            <div class="cube" onclick="nextScene(3)">
+                <div class="cube-face front">🌈</div>
+                <div class="cube-face back">🎨</div>
+                <div class="cube-face right">🎉</div>
+                <div class="cube-face left">✨</div>
+                <div class="cube-face top">💖</div>
+                <div class="cube-face bottom">🎊</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCENE 3: Emotional Twist -->
+    <div id="scene-3" class="scene" style="background: radial-gradient(circle, rgba(255,20,147,0.2) 0%, rgba(0,0,0,0) 70%);">
+        <h2 class="text-2xl md:text-5xl font-light mb-6 typing-text" id="type-text-2"></h2>
+        <div class="heart-beat" id="s3-heart">💖</div>
+        <h2 class="text-2xl md:text-5xl font-bold mt-4 typing-text text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500" id="type-text-3"></h2>
+    </div>
+
+    <!-- SCENE 4: Big Reveal -->
+    <div id="scene-4" class="scene">
+        <h1 class="text-3d-glow festive-font text-center leading-tight">Happy Holi<br><span class="text-4xl md:text-6xl text-white">My Amazing Friends!</span></h1>
+        <p class="mt-8 text-lg md:text-2xl text-gray-200 font-light max-w-2xl px-4">Let the colors of joy, love, and laughter fill your life today and forever.</p>
+        <div class="tap-hint mt-10">👇 Smriti Gulo Dekhun 👇</div>
+        <button class="glowing-btn mt-4" onclick="revealGallery()">Unwrap Memories</button>
+    </div>
+
+    <!-- SCENE 5 & 6: Gallery & Final Message -->
+    <div id="final-section">
+        
+        <h2 class="festive-font text-4xl md:text-5xl text-center mt-20 mb-10 text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-blue-500">Our Colorful Journey</h2>
+        
+        <div class="gallery-container" id="gallery">
+            <!-- Images generated dynamically in JS -->
+        </div>
+
+        <div class="mt-32 mb-20 text-center px-4 max-w-4xl cursor-pointer" onclick="createMassiveExplosion(event)">
+            <div class="tap-hint" style="font-size: 1.5rem;">👇 Je Kono Jaygay Tap Korun 👇</div>
+            <h2 class="festive-font text-4xl md:text-6xl text-white mb-6 mt-4" style="text-shadow: 0 0 20px var(--c1);">May your life always be filled with beautiful colors.</h2>
+        </div>
+
+        <div class="glow-footer festive-font mb-10">
+            Created by Arpan Gayen
+        </div>
+    </div>
+
+    <!-- Running Holi Characters -->
+    <div class="holi-char" id="runner-1" style="animation-duration: 8s; animation-delay: 0s;">🏃‍♂️💦</div>
+    <div class="holi-char" id="runner-2" style="animation-duration: 12s; animation-delay: 2s; font-size: 5rem;">💃🎨</div>
+    <div class="holi-char" id="runner-3" style="animation-duration: 9s; animation-delay: 5s;">🕺🔫</div>
+    <div class="holi-char" id="runner-4" style="animation-duration: 14s; animation-delay: 7s; font-size: 3.5rem;">🏃‍♀️🎈</div>
+
+    <script>
+        /* --- UTILITIES & CONFIG --- */
+        const colors = ['#FF1493', '#00FFFF', '#FFFF00', '#32CD32', '#FF4500', '#8A2BE2', '#FF69B4', '#00FF7F'];
+        const pichkaris = ['🔫', '💦', '🎈', '✨'];
+        let currentScene = 1;
+        let isMusicPlaying = false;
+        const music = document.getElementById('bg-music');
+        music.volume = 0.5;
+
+        // Initialize Intro
+        setTimeout(() => {
+            document.getElementById('s1-text').classList.remove('opacity-0');
+            document.getElementById('s1-hint').classList.remove('opacity-0');
+            document.getElementById('btn-start').classList.remove('opacity-0');
+        }, 1000);
+
+        /* --- MUSIC CONTROLS --- */
+        function toggleMusic() {
+            if (isMusicPlaying) {
+                music.pause();
+                document.getElementById('icon-play').classList.remove('hidden');
+                document.getElementById('icon-pause').classList.add('hidden');
+            } else {
+                music.play().catch(e => console.log("Audio play blocked", e));
+                document.getElementById('icon-play').classList.add('hidden');
+                document.getElementById('icon-pause').classList.remove('hidden');
+            }
+            isMusicPlaying = !isMusicPlaying;
+        }
+
+        /* --- SCENE MANAGEMENT --- */
+        function nextScene(sceneNum, startMusic = false) {
+            if (startMusic && !isMusicPlaying) toggleMusic();
+            
+            // Trigger transition explosion
+            createExplosion(window.innerWidth/2, window.innerHeight/2, 100);
+            
+            // Hide current
+            document.querySelector('.scene.active').classList.remove('active');
+            
+            setTimeout(() => {
+                const next = document.getElementById(`scene-${sceneNum}`);
+                next.classList.add('active');
+                currentScene = sceneNum;
+                
+                // Scene specific triggers
+                if (sceneNum === 2) triggerScene2();
+                if (sceneNum === 3) triggerScene3();
+                if (sceneNum === 4) triggerScene4();
+            }, 800); // Wait for explosion
+        }
+
+        function triggerScene2() {
+            typeWriter('type-text-1', "Holi is not just a festival...", 100, () => {
+                setTimeout(() => {
+                    document.getElementById('s2-box-container').classList.remove('opacity-0');
+                    createExplosion(window.innerWidth/2, window.innerHeight/2 + 100, 50);
+                }, 500);
+            });
+        }
+
+        function triggerScene3() {
+            typeWriter('type-text-2', "True colors are not in powders...", 80, () => {
+                setTimeout(() => {
+                    document.getElementById('s3-heart').style.display = 'block';
+                    createExplosion(window.innerWidth/2, window.innerHeight/2, 60);
+                    setTimeout(() => {
+                        typeWriter('type-text-3', "They are in friendships.", 80, () => {});
+                        
+                        // Auto progress to Reveal after emotional pause
+                        setTimeout(() => { nextScene(4); }, 4000);
+                    }, 1500);
+                }, 1000);
+            });
+        }
+
+        function triggerScene4() {
+            // Massive fireworks
+            let fwCount = 0;
+            const fwInterval = setInterval(() => {
+                createExplosion(
+                    Math.random() * window.innerWidth, 
+                    Math.random() * window.innerHeight * 0.8, 
+                    200 // Increased for massive effect
+                );
+                fwCount++;
+                if(fwCount > 15) clearInterval(fwInterval);
+            }, 250);
+
+            // Floating elements
+            for(let i=0; i<40; i++) {
+                setTimeout(createFloatingElement, Math.random() * 3000);
+            }
+
+            // Show running holi characters
+            document.querySelectorAll('.holi-char').forEach(el => el.style.display = 'block');
+        }
+
+        function revealGallery() {
+            createMassiveExplosion({clientX: window.innerWidth/2, clientY: window.innerHeight/2});
+            document.getElementById('scene-4').classList.remove('active');
+            document.body.classList.remove('no-scroll');
+            
+            setTimeout(() => {
+                const finalSec = document.getElementById('final-section');
+                finalSec.classList.add('active');
+                renderGallery();
+                // Scroll down slightly
+                window.scrollTo({ top: window.innerHeight * 0.8, behavior: 'smooth' });
+            }, 800);
+        }
+
+        /* --- TYPEWRITER EFFECT --- */
+        function typeWriter(elementId, text, speed, callback) {
+            const el = document.getElementById(elementId);
+            el.innerHTML = '';
+            el.style.borderRight = '3px solid white';
+            let i = 0;
+            function type() {
+                if (i < text.length) {
+                    el.innerHTML += text.charAt(i);
+                    i++;
+                    setTimeout(type, speed);
+                } else {
+                    setTimeout(() => { el.style.borderRight = 'none'; }, 1000);
+                    if (callback) callback();
+                }
+            }
+            type();
+        }
+
+        /* --- FLOATING ELEMENTS (Pichkari/Balloons) --- */
+        function createFloatingElement() {
+            const el = document.createElement('div');
+            el.className = 'balloon';
+            el.innerText = pichkaris[Math.floor(Math.random() * pichkaris.length)];
+            el.style.left = Math.random() * 100 + 'vw';
+            el.style.animation = `floatUpFade ${3 + Math.random() * 4}s ease-in forwards`;
+            document.getElementById('scene-4').appendChild(el);
+            setTimeout(() => { el.remove(); }, 7000);
+        }
+
+        /* --- 3D GALLERY LOGIC --- */
+        const galleryImages = [
+            { src: "https://images.unsplash.com/photo-1551817958-c5b51e52bb0c?w=600&auto=format&fit=crop", text: "Crazy Colors 🎨" },
+            { src: "https://images.unsplash.com/photo-1520880867055-1e30d1cb001c?w=600&auto=format&fit=crop", text: "Endless Joy 😂" },
+            { src: "https://images.unsplash.com/photo-1582294406560-f4d0f666f772?w=600&auto=format&fit=crop", text: "Unforgettable Memories ✨" },
+            { src: "https://images.unsplash.com/photo-1551818255-e6e10975bc17?w=600&auto=format&fit=crop", text: "Pure Happiness 💖" },
+            { src: "https://images.unsplash.com/photo-1615233500806-382ee04da122?w=600&auto=format&fit=crop", text: "Best Squad 🤝" },
+            { src: "https://images.unsplash.com/photo-1551817958-39d2c5e53303?w=600&auto=format&fit=crop", text: "Forever Vibes 🌈" }
+        ];
+
+        function renderGallery() {
+            const container = document.getElementById('gallery');
+            container.innerHTML = '';
+            galleryImages.forEach((img, index) => {
+                const card = document.createElement('div');
+                card.className = 'gallery-card';
+                card.innerHTML = `
+                    <img src="${img.src}" alt="Memory" loading="lazy">
+                    <div class="card-caption">${img.text}</div>
+                `;
+                
+                // 3D Tilt Effect Setup
+                card.addEventListener('mousemove', (e) => {
+                    const rect = card.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    const centerX = rect.width / 2;
+                    const centerY = rect.height / 2;
+                    const rotateX = ((y - centerY) / centerY) * -15;
+                    const rotateY = ((x - centerX) / centerX) * 15;
+                    card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.05, 1.05, 1.05)`;
+                });
+
+                card.addEventListener('mouseleave', () => {
+                    card.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`;
+                });
+
+                // Add stagger entrance
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(50px)';
+                container.appendChild(card);
+
+                setTimeout(() => {
+                    card.style.transition = 'all 0.6s cubic-bezier(0.23, 1, 0.32, 1)';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, 200 * index);
+            });
+        }
+
+
+        /* --- CANVAS PARTICLE SYSTEM (Background & Splashes) --- */
+        const bgCanvas = document.getElementById('bg-canvas');
+        const bgCtx = bgCanvas.getContext('2d', { alpha: false }); // Optimize bg
+        const fxCanvas = document.getElementById('fx-canvas');
+        const fxCtx = fxCanvas.getContext('2d');
+
+        let width, height;
+        let bgParticles = [];
+        let fxParticles = [];
+
+        function resizeCanvas() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            bgCanvas.width = width;
+            bgCanvas.height = height;
+            fxCanvas.width = width;
+            fxCanvas.height = height;
+            initBgParticles();
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+
+        // Particle Classes
+        class BgParticle {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.size = Math.random() * 5 + 2;
+                this.speedX = Math.random() * 1 - 0.5;
+                this.speedY = Math.random() * -1 - 0.5; // Float up
+                this.color = colors[Math.floor(Math.random() * colors.length)];
+                this.alpha = Math.random() * 0.5 + 0.1;
+            }
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                if (this.y < -10) this.y = height + 10;
+                if (this.x < -10) this.x = width + 10;
+                if (this.x > width + 10) this.x = -10;
+            }
+            draw() {
+                bgCtx.globalAlpha = this.alpha;
+                bgCtx.fillStyle = this.color;
+                bgCtx.beginPath();
+                bgCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                bgCtx.fill();
+            }
+        }
+
+        class FxParticle {
+            constructor(x, y, isExplosion = false) {
+                this.x = x;
+                this.y = y;
+                this.size = Math.random() * (isExplosion ? 8 : 15) + 2;
+                
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * (isExplosion ? 15 : 8) + 2;
+                this.speedX = Math.cos(angle) * speed;
+                this.speedY = Math.sin(angle) * speed;
+                
+                this.color = colors[Math.floor(Math.random() * colors.length)];
+                this.life = 1.0;
+                this.decay = Math.random() * 0.02 + 0.015;
+                this.gravity = 0.15;
+            }
+            update() {
+                this.speedY += this.gravity;
+                this.x += this.speedX;
+                this.y += this.speedY;
+                this.life -= this.decay;
+                this.size *= 0.98; // shrink
+            }
+            draw() {
+                fxCtx.globalAlpha = Math.max(0, this.life);
+                fxCtx.fillStyle = this.color;
+                fxCtx.beginPath();
+                fxCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                fxCtx.fill();
+            }
+        }
+
+        function initBgParticles() {
+            bgParticles = [];
+            const count = window.innerWidth < 768 ? 150 : 350; // Increased background particles
+            for (let i = 0; i < count; i++) {
+                bgParticles.push(new BgParticle());
+            }
+        }
+
+        function createSplash(e) {
+            // Don't splash if clicking a button to prevent weird overlap
+            if(e.target.tagName === 'BUTTON' || e.target.closest('button')) return;
+            
+            const x = e.touches ? e.touches[0].clientX : e.clientX;
+            const y = e.touches ? e.touches[0].clientY : e.clientY;
+            
+            const count = window.innerWidth < 768 ? 80 : 150; // Increased splash particles
+            for (let i = 0; i < count; i++) {
+                fxParticles.push(new FxParticle(x, y, false));
+            }
+        }
+
+        function createExplosion(x, y, count = 150) {
+            const actualCount = window.innerWidth < 768 ? count * 1.5 : count * 2.5; // Massive explosion multiplier
+            for (let i = 0; i < actualCount; i++) {
+                fxParticles.push(new FxParticle(x, y, true));
+            }
+        }
+
+        function createMassiveExplosion(e) {
+            const x = e.clientX || window.innerWidth/2;
+            const y = e.clientY || window.innerHeight/2;
+            createExplosion(x, y, 400); // Screen filling explosion
+            
+            // Flash background
+            const originalBg = document.body.style.backgroundColor;
+            document.body.style.backgroundColor = 'white';
+            setTimeout(() => {
+                document.body.style.backgroundColor = originalBg;
+            }, 100);
+        }
+
+        // Global click listener for splashes
+        window.addEventListener('mousedown', createSplash);
+        window.addEventListener('touchstart', createSplash, {passive: true});
+
+        function animate() {
+            // Draw Background (Clear with slight trail effect)
+            bgCtx.globalAlpha = 1;
+            bgCtx.fillStyle = '#0a0a0a';
+            bgCtx.fillRect(0, 0, width, height);
+            
+            bgParticles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+
+            // Draw Foregound Splashes
+            fxCtx.clearRect(0, 0, width, height);
+            for (let i = fxParticles.length - 1; i >= 0; i--) {
+                const p = fxParticles[i];
+                p.update();
+                p.draw();
+                if (p.life <= 0 || p.size <= 0.5) {
+                    fxParticles.splice(i, 1);
+                }
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        // Boot
+        resizeCanvas();
+        animate();
+
+    </script>
+</body>
+</html>
